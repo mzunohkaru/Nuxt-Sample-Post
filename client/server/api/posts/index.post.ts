@@ -2,24 +2,36 @@ import { getDB } from "../../utils/db";
 
 export default defineEventHandler(async (event) => {
   try {
+    const body = await readBody(event);
+
+    // リクエストボディの検証
+    if (!body.title || !body.content) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "タイトルと内容は必須です",
+      });
+    }
+
     const db = getDB();
 
     // データベース接続をテスト
     await db.query("SELECT 1");
 
+    // 新しい投稿を挿入
     const result = await db.query(
-      "SELECT * FROM posts ORDER BY created_at DESC"
+      "INSERT INTO posts (title, content) VALUES ($1, $2) RETURNING *",
+      [body.title, body.content]
     );
 
     return {
       success: true,
-      data: result.rows,
+      data: result.rows[0],
     };
   } catch (error) {
-    console.error("Error fetching posts:", error);
+    console.error("Error creating post:", error);
 
     // より詳細なエラー情報を提供
-    let errorMessage = "Failed to fetch posts";
+    let errorMessage = "Failed to create post";
     if (error instanceof Error) {
       errorMessage = `Database error: ${error.message}`;
     }
