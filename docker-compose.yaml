@@ -1,0 +1,35 @@
+services:
+  client:
+    container_name: "nuxt3-client-container"
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/bulletin_board
+    volumes:
+      - ./client:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    tty: true
+    restart: unless-stopped
+
+  db:
+    container_name: "postgres-db-container"
+    build: ./db
+    environment:
+      - POSTGRES_DB=bulletin_board
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
