@@ -7,7 +7,7 @@ COPY client/package*.json ./
 RUN npm install
 
 # アプリケーションファイルをコピー
-COPY client/ .
+COPY . .
 
 # Nuxtの準備
 RUN npm run postinstall
