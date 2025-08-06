@@ -1,3 +1,79 @@
+<script setup lang="ts">
+import { ref } from "vue";
+
+const { data, pending, error, refresh } = await useFetch("/api/posts");
+
+// 新しい投稿用のリアクティブデータ
+const newPost = ref({
+  title: "",
+  content: "",
+});
+
+const isSubmitting = ref(false);
+
+// 日付フォーマット関数
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+  if (diffInMinutes < 1) {
+    return "たった今";
+  } else if (diffInMinutes < 60) {
+    return `${diffInMinutes}分前`;
+  } else if (diffInHours < 24) {
+    return `${diffInHours}時間前`;
+  } else if (diffInDays < 7) {
+    return `${diffInDays}日前`;
+  } else {
+    return date.toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }
+};
+
+// 投稿送信関数
+const submitPost = async () => {
+  if (!newPost.value.title || !newPost.value.content) {
+    alert("タイトルと内容を入力してください");
+    return;
+  }
+
+  isSubmitting.value = true;
+
+  try {
+    const response = await $fetch("/api/posts", {
+      method: "POST",
+      body: {
+        title: newPost.value.title,
+        content: newPost.value.content,
+      },
+    });
+
+    if (response.success) {
+      // フォームをクリア
+      newPost.value.title = "";
+      newPost.value.content = "";
+
+      // 投稿リストを更新
+      await refresh();
+
+      alert("投稿が正常に作成されました！");
+    }
+  } catch (error) {
+    console.error("投稿の作成中にエラーが発生しました:", error);
+    alert("投稿の作成に失敗しました。もう一度お試しください。");
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+</script>
+
 <template>
   <div class="p-4">
     <h1 class="text-2xl font-bold mb-4">Posts</h1>
@@ -31,7 +107,7 @@
         </div>
       </div>
 
-      <form @submit.prevent="submitPost" class="p-6">
+      <form class="p-6" @submit.prevent="submitPost">
         <div class="space-y-4">
           <div>
             <label
@@ -94,7 +170,7 @@
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 transition-colors resize-none"
               placeholder="投稿の内容を入力してください"
               required
-            ></textarea>
+            />
           </div>
         </div>
 
@@ -117,12 +193,12 @@
                 r="10"
                 stroke="currentColor"
                 stroke-width="4"
-              ></circle>
+              />
               <path
                 class="opacity-75"
                 fill="currentColor"
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
+              />
             </svg>
             <svg
               v-else
@@ -149,7 +225,7 @@
       <div class="text-center">
         <div
           class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"
-        ></div>
+        />
         <p class="text-gray-600">投稿を読み込み中...</p>
       </div>
     </div>
@@ -199,7 +275,7 @@
                   {{ post.title }}
                 </h3>
                 <div class="flex-shrink-0 ml-2">
-                  <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <div class="w-2 h-2 bg-green-400 rounded-full"/>
                 </div>
               </div>
 
@@ -305,79 +381,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref } from "vue";
-
-const { data, pending, error, refresh } = await useFetch("/api/posts");
-
-// 新しい投稿用のリアクティブデータ
-const newPost = ref({
-  title: "",
-  content: "",
-});
-
-const isSubmitting = ref(false);
-
-// 日付フォーマット関数
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffInMs = now.getTime() - date.getTime();
-  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-
-  if (diffInMinutes < 1) {
-    return "たった今";
-  } else if (diffInMinutes < 60) {
-    return `${diffInMinutes}分前`;
-  } else if (diffInHours < 24) {
-    return `${diffInHours}時間前`;
-  } else if (diffInDays < 7) {
-    return `${diffInDays}日前`;
-  } else {
-    return date.toLocaleDateString("ja-JP", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }
-};
-
-// 投稿送信関数
-const submitPost = async () => {
-  if (!newPost.value.title || !newPost.value.content) {
-    alert("タイトルと内容を入力してください");
-    return;
-  }
-
-  isSubmitting.value = true;
-
-  try {
-    const response = await $fetch("/api/posts", {
-      method: "POST",
-      body: {
-        title: newPost.value.title,
-        content: newPost.value.content,
-      },
-    });
-
-    if (response.success) {
-      // フォームをクリア
-      newPost.value.title = "";
-      newPost.value.content = "";
-
-      // 投稿リストを更新
-      await refresh();
-
-      alert("投稿が正常に作成されました！");
-    }
-  } catch (error) {
-    console.error("投稿の作成中にエラーが発生しました:", error);
-    alert("投稿の作成に失敗しました。もう一度お試しください。");
-  } finally {
-    isSubmitting.value = false;
-  }
-};
-</script>

@@ -1,6 +1,6 @@
 import { getDB } from "../../utils/db";
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async () => {
   try {
     const db = getDB();
 
@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
     await db.query("SELECT 1");
 
     const result = await db.query(
-      "SELECT * FROM posts ORDER BY created_at DESC"
+      "SELECT * FROM posts ORDER BY created_at DESC",
     );
 
     return {

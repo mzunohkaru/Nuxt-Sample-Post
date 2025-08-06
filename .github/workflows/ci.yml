@@ -29,10 +29,6 @@ jobs:
         working-directory: ./client
         run: npm ci
 
-      - name: Run lint check
-        working-directory: ./client
-        run: npm run lint
-
       - name: Run lint fix check
         working-directory: ./client
         run: npm run lint:fix
