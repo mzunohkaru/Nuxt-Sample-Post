@@ -2,6 +2,8 @@
   "name": "nuxt-app",
   "private": true,
   "type": "module",
+  "version": "1.0.0",
+  "description": "E2E tests and documentation generator for Vue Docker project",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
@@ -9,7 +11,11 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
-    "lint:fix": "eslint --fix ."
+    "lint:fix": "eslint --fix .",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "install-browsers": "playwright install"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.49",
@@ -22,6 +28,7 @@
     "@nuxt/eslint": "^1.4.1",
     "@types/pg": "^8.15.4",
     "eslint": "^9.29.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "@playwright/test": "^1.47.2"
   }
 }

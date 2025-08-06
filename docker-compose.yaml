@@ -3,12 +3,12 @@ services:
     container_name: "nuxt3-client-container"
     build:
       context: .
-      dockerfile: client/Dockerfile
+      dockerfile: Dockerfile
     environment:
       - NODE_ENV=${NODE_ENV}
       - DATABASE_URL=${DATABASE_URL}
     volumes:
-      - ./client:/usr/src/app
+      - .:/usr/src/app
       - /usr/src/app/node_modules
     ports:
       - "3000:3000"
