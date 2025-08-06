@@ -3,7 +3,7 @@
 .PHONY: start stop restart logs reset build exec help
 
 # 開発環境を起動
-start:
+setup:
 	@echo "🚀 開発環境を起動しています..."
 	@docker-compose up
 	@echo "✅ 開発環境が起動しました"
