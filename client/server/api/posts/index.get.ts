@@ -8,7 +8,7 @@ export default defineEventHandler(async () => {
     await db.query("SELECT 1");
 
     const result = await db.query(
-      "SELECT * FROM posts ORDER BY created_at DESC",
+      "SELECT p.*, u.username FROM posts p JOIN users u ON p.user_id = u.id ORDER BY p.created_at DESC",
     );
 
     return {

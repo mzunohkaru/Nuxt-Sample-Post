@@ -4,6 +4,8 @@ interface Post {
   id: number;
   title: string;
   content: string;
+  user_id: number;
+  username: string;
   created_at: string;
 }
 
@@ -62,23 +64,41 @@ const formatDate = (dateString: string) => {
 
       <!-- フッター -->
       <div class="post-card-footer">
-        <div class="post-card-time-container">
-          <svg
-            class="post-card-time-icon"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <time :datetime="post.created_at">
-            {{ formatDate(post.created_at) }}
-          </time>
+        <div class="post-card-meta">
+          <div class="post-card-author">
+            <svg
+              class="post-card-author-icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
+            </svg>
+            <span class="author-name">{{ post.username }}</span>
+          </div>
+          <div class="post-card-time-container">
+            <svg
+              class="post-card-time-icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <time :datetime="post.created_at">
+              {{ formatDate(post.created_at) }}
+            </time>
+          </div>
         </div>
         <div class="post-card-actions">
           <button class="post-card-action-button">
@@ -184,6 +204,32 @@ const formatDate = (dateString: string) => {
   justify-content: space-between;
   padding-top: 1rem;
   border-top: 1px solid #f3f4f6;
+}
+
+.post-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.post-card-author {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: #374151;
+}
+
+.post-card-author-icon {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.25rem;
+  color: #6b7280;
+}
+
+.author-name {
+  font-weight: 500;
 }
 
 .post-card-time-container {
