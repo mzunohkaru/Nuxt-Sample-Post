@@ -4,7 +4,8 @@ interface Props {
   message?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+// props変数を削除し、withDefaultsの結果を直接使用
+withDefaults(defineProps<Props>(), {
   message: "読み込み中...",
 });
 </script>

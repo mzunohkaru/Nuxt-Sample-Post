@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
 
-// 認証状態管理
-const { isAuthenticated, initAuth, getCurrentUser, requireAuth } = useAuth();
+// 認証状態管理 - isAuthenticatedを削除
+const { initAuth, getCurrentUser, requireAuth } = useAuth();
 
 // 認証チェック
 onMounted(() => {
@@ -48,8 +48,18 @@ const user = getCurrentUser();
       <!-- アクションボタン -->
       <div class="action-section">
         <NuxtLink to="/" class="back-button">
-          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          <svg
+            class="button-icon"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
           </svg>
           投稿一覧に戻る
         </NuxtLink>

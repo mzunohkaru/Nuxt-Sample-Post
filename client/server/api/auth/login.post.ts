@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     // ユーザーを検索
     const userResult = await db.query(
       "SELECT id, username, email, password_hash FROM users WHERE username = $1 OR email = $1",
-      [body.username]
+      [body.username],
     );
 
     if (userResult.rows.length === 0) {

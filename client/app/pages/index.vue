@@ -6,9 +6,8 @@ import LoadingState from "~/components/LoadingState.vue";
 import ErrorState from "~/components/ErrorState.vue";
 import EmptyState from "~/components/EmptyState.vue";
 
-// 認証状態管理
-const { isAuthenticated, initAuth, logout, getCurrentUser, requireAuth } =
-  useAuth();
+// 認証状態管理 - isAuthenticatedとhandleLogoutを削除
+const { initAuth, getCurrentUser, requireAuth } = useAuth();
 
 // 認証チェック
 onMounted(() => {
@@ -21,12 +20,6 @@ onMounted(() => {
 const { data, pending, error, refresh } = await useFetch("/api/posts");
 
 const isSubmitting = ref(false);
-
-// ログアウト処理
-const handleLogout = () => {
-  logout();
-  navigateTo("/login");
-};
 
 // 投稿送信関数
 const handleSubmitPost = async (postData: {

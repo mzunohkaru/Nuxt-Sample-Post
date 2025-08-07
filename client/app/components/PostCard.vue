@@ -1,19 +1,12 @@
 <script setup lang="ts">
-// Props
-interface Post {
-  id: number;
-  title: string;
-  content: string;
-  user_id: number;
-  username: string;
-  created_at: string;
-}
+import type { Post } from "~~/types";
 
+// Props
 interface Props {
   post: Post;
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 // 日付フォーマット関数
 const formatDate = (dateString: string) => {

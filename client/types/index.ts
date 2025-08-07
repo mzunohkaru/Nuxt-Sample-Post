@@ -79,7 +79,8 @@ export interface BaseApiResponse {
 /**
  * データ付きAPIレスポンス
  */
-export interface ApiResponse<T = any> extends BaseApiResponse {
+export interface ApiResponse<T = unknown> extends BaseApiResponse {
+  // any から unknown に変更
   data: T;
 }
 
@@ -250,7 +251,8 @@ export type LoadingState = "idle" | "loading" | "success" | "error";
 /**
  * API呼び出し状態
  */
-export interface ApiCallState<T = any> {
+export interface ApiCallState<T = unknown> {
+  // any から unknown に変更
   data: T | null;
   loading: boolean;
   error: string | null;

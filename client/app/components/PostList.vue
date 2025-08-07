@@ -1,20 +1,11 @@
 <script setup lang="ts">
 import PostCard from "./PostCard.vue";
+import type { Post } from "~~/types";
 
-// Props
-interface Post {
-  id: number;
-  title: string;
-  content: string;
-  created_at: string;
-}
-
-interface Props {
+withDefaults(defineProps<{
   posts: Post[];
   title?: string;
-}
-
-const props = withDefaults(defineProps<Props>(), {
+}>(), {
   title: "投稿一覧",
 });
 </script>

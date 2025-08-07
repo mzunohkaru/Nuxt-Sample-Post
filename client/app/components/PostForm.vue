@@ -6,7 +6,8 @@ interface Props {
   isSubmitting?: boolean;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+// props変数を削除し、withDefaultsの結果を直接使用
+withDefaults(defineProps<Props>(), {
   isSubmitting: false,
 });
 

@@ -43,7 +43,7 @@ const closeMobileMenu = () => {
             </svg>
             投稿一覧
           </NuxtLink>
-          
+
           <NuxtLink v-if="isAuthenticated" to="/account" class="nav-link" active-class="nav-link-active">
             <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -57,7 +57,7 @@ const closeMobileMenu = () => {
           <span class="welcome-text">
             {{ getCurrentUser()?.username }}さん
           </span>
-          <button @click="handleLogout" class="logout-button">
+          <button class="logout-button" @click="handleLogout">
             <svg class="logout-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
@@ -72,7 +72,7 @@ const closeMobileMenu = () => {
       </div>
 
       <!-- モバイルメニューボタン -->
-      <button @click="toggleMobileMenu" class="mobile-menu-button">
+      <button class="mobile-menu-button" @click="toggleMobileMenu">
         <svg class="mobile-menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path v-if="!isMobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
           <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -89,7 +89,7 @@ const closeMobileMenu = () => {
           </svg>
           投稿一覧
         </NuxtLink>
-        
+
         <NuxtLink v-if="isAuthenticated" to="/account" class="mobile-nav-link" active-class="mobile-nav-link-active" @click="closeMobileMenu">
           <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -103,7 +103,7 @@ const closeMobileMenu = () => {
         <div class="mobile-welcome-text">
           {{ getCurrentUser()?.username }}さん
         </div>
-        <button @click="handleLogout" class="mobile-logout-button">
+        <button class="mobile-logout-button" @click="handleLogout">
           <svg class="logout-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013 3v1" />
           </svg>

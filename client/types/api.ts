@@ -1,6 +1,5 @@
 import type {
   Post,
-  User,
   LoginRequest,
   RegisterRequest,
   CreatePostRequest,
@@ -60,7 +59,7 @@ export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 export interface ApiRequestOptions {
   method?: HttpMethod;
   headers?: Record<string, string>;
-  body?: any;
+  body?: unknown; // any から unknown に変更
   params?: Record<string, string | number>;
   timeout?: number;
 }
@@ -72,7 +71,7 @@ export class ApiError extends Error {
   constructor(
     public statusCode: number,
     public statusMessage: string,
-    public response?: any
+    public response?: unknown, // any から unknown に変更
   ) {
     super(`API Error ${statusCode}: ${statusMessage}`);
     this.name = "ApiError";
@@ -85,7 +84,7 @@ export class ApiError extends Error {
  * 成功レスポンスかどうかチェック
  */
 export const isSuccessResponse = <T>(
-  response: any
+  response: unknown, // any から unknown に変更
 ): response is ApiResponse<T> => {
   return response && typeof response === "object" && response.success === true;
 };
@@ -94,7 +93,7 @@ export const isSuccessResponse = <T>(
  * エラーレスポンスかどうかチェック
  */
 export const isErrorResponse = (
-  response: any
+  response: unknown, // any から unknown に変更
 ): response is ApiResponse<never> => {
   return response && typeof response === "object" && response.success === false;
 };

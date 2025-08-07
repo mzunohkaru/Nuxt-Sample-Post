@@ -6,7 +6,8 @@ interface Props {
   icon?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+// props変数を削除し、withDefaultsの結果を直接使用
+withDefaults(defineProps<Props>(), {
   title: "まだ投稿がありません",
   message: "上のフォームから最初の投稿を作成してみましょう。",
   icon: "document",
