@@ -75,20 +75,16 @@ const submitPost = async () => {
 </script>
 
 <template>
-  <div class="p-4">
-    <h1 class="text-2xl font-bold mb-4">Posts</h1>
+  <div class="main-container">
+    <h1 class="main-title">Posts</h1>
 
     <!-- 投稿フォーム -->
-    <div
-      class="mb-8 bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden"
-    >
-      <div
-        class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200"
-      >
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
+    <div class="post-form-container">
+      <div class="post-form-header">
+        <div class="post-form-header-content">
+          <div class="post-form-icon-container">
             <svg
-              class="w-6 h-6 text-blue-600"
+              class="post-form-icon"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -101,22 +97,22 @@ const submitPost = async () => {
               />
             </svg>
           </div>
-          <h2 class="ml-3 text-lg font-semibold text-gray-900">
+          <h2 class="post-form-title">
             新しい投稿を作成
           </h2>
         </div>
       </div>
 
-      <form class="p-6" @submit.prevent="submitPost">
-        <div class="space-y-4">
+      <form class="post-form" @submit.prevent="submitPost">
+        <div class="form-fields">
           <div>
             <label
               for="title"
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="form-field-label"
             >
-              <span class="flex items-center">
+              <span class="form-field-label-content">
                 <svg
-                  class="w-4 h-4 mr-1"
+                  class="form-field-icon"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -135,7 +131,7 @@ const submitPost = async () => {
               id="title"
               v-model="newPost.title"
               type="text"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 transition-colors"
+              class="form-input"
               placeholder="投稿のタイトルを入力してください"
               required
             />
@@ -144,11 +140,11 @@ const submitPost = async () => {
           <div>
             <label
               for="content"
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="form-field-label"
             >
-              <span class="flex items-center">
+              <span class="form-field-label-content">
                 <svg
-                  class="w-4 h-4 mr-1"
+                  class="form-field-icon"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -167,27 +163,27 @@ const submitPost = async () => {
               id="content"
               v-model="newPost.content"
               rows="4"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 transition-colors resize-none"
+              class="form-textarea"
               placeholder="投稿の内容を入力してください"
               required
             />
           </div>
         </div>
 
-        <div class="mt-6 flex justify-end">
+        <div class="form-submit-container">
           <button
             type="submit"
             :disabled="isSubmitting"
-            class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            class="form-submit-button"
           >
             <svg
               v-if="isSubmitting"
-              class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+              class="submit-spinner"
               fill="none"
               viewBox="0 0 24 24"
             >
               <circle
-                class="opacity-25"
+                class="submit-spinner-circle"
                 cx="12"
                 cy="12"
                 r="10"
@@ -195,14 +191,14 @@ const submitPost = async () => {
                 stroke-width="4"
               />
               <path
-                class="opacity-75"
+                class="submit-spinner-path"
                 fill="currentColor"
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
             <svg
               v-else
-              class="w-4 h-4 mr-2"
+              class="submit-icon"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -221,24 +217,19 @@ const submitPost = async () => {
     </div>
 
     <!-- ローディング状態 -->
-    <div v-if="pending" class="flex items-center justify-center py-12">
-      <div class="text-center">
-        <div
-          class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"
-        />
-        <p class="text-gray-600">投稿を読み込み中...</p>
+    <div v-if="pending" class="loading-container">
+      <div class="loading-content">
+        <div class="loading-spinner" />
+        <p class="loading-text">投稿を読み込み中...</p>
       </div>
     </div>
 
     <!-- エラー状態 -->
-    <div
-      v-else-if="error"
-      class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6"
-    >
-      <div class="flex items-center">
-        <div class="flex-shrink-0">
+    <div v-else-if="error" class="error-container">
+      <div class="error-content">
+        <div class="error-icon-container">
           <svg
-            class="w-6 h-6 text-red-600"
+            class="error-icon"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -251,48 +242,46 @@ const submitPost = async () => {
             />
           </svg>
         </div>
-        <div class="ml-3">
-          <h3 class="text-sm font-medium text-red-800">エラーが発生しました</h3>
-          <p class="text-sm text-red-700 mt-1">{{ error.message }}</p>
+        <div class="error-text-container">
+          <h3 class="error-title">エラーが発生しました</h3>
+          <p class="error-message">{{ error.message }}</p>
         </div>
       </div>
     </div>
 
     <div v-else>
       <!-- 投稿一覧 -->
-      <div v-if="data?.success && data.data.length > 0" class="space-y-6">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">投稿一覧</h2>
-        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div v-if="data?.success && data.data.length > 0" class="posts-container">
+        <h2 class="posts-title">投稿一覧</h2>
+        <div class="posts-grid">
           <article
             v-for="post in data.data"
             :key="post.id"
-            class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-200 overflow-hidden"
+            class="post-card"
           >
             <!-- カードヘッダー -->
-            <div class="p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="text-lg font-semibold text-gray-900 leading-tight">
+            <div class="post-card-content">
+              <div class="post-card-header">
+                <h3 class="post-card-title">
                   {{ post.title }}
                 </h3>
-                <div class="flex-shrink-0 ml-2">
-                  <div class="w-2 h-2 bg-green-400 rounded-full"/>
+                <div class="post-card-status-container">
+                  <div class="post-card-status-dot"/>
                 </div>
               </div>
 
               <!-- 投稿内容 -->
-              <div class="mb-4">
-                <p class="text-gray-700 leading-relaxed line-clamp-3">
+              <div class="post-card-body">
+                <p class="post-card-text">
                   {{ post.content }}
                 </p>
               </div>
 
               <!-- フッター -->
-              <div
-                class="flex items-center justify-between pt-4 border-t border-gray-100"
-              >
-                <div class="flex items-center text-sm text-gray-500">
+              <div class="post-card-footer">
+                <div class="post-card-time-container">
                   <svg
-                    class="w-4 h-4 mr-1"
+                    class="post-card-time-icon"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -308,12 +297,10 @@ const submitPost = async () => {
                     {{ formatDate(post.created_at) }}
                   </time>
                 </div>
-                <div class="flex items-center space-x-1">
-                  <button
-                    class="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
+                <div class="post-card-actions">
+                  <button class="post-card-action-button">
                     <svg
-                      class="w-4 h-4"
+                      class="post-card-action-icon"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -326,11 +313,9 @@ const submitPost = async () => {
                       />
                     </svg>
                   </button>
-                  <button
-                    class="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
+                  <button class="post-card-action-button">
                     <svg
-                      class="w-4 h-4"
+                      class="post-card-action-icon"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -351,13 +336,11 @@ const submitPost = async () => {
       </div>
 
       <!-- 投稿がない場合 -->
-      <div v-else class="text-center py-12">
-        <div class="max-w-sm mx-auto">
-          <div
-            class="bg-gray-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4"
-          >
+      <div v-else class="no-posts-container">
+        <div class="no-posts-content">
+          <div class="no-posts-icon-container">
             <svg
-              class="w-8 h-8 text-gray-400"
+              class="no-posts-icon"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -370,10 +353,10 @@ const submitPost = async () => {
               />
             </svg>
           </div>
-          <h3 class="text-lg font-medium text-gray-900 mb-2">
+          <h3 class="no-posts-title">
             まだ投稿がありません
           </h3>
-          <p class="text-gray-500">
+          <p class="no-posts-text">
             上のフォームから最初の投稿を作成してみましょう。
           </p>
         </div>
@@ -381,3 +364,434 @@ const submitPost = async () => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* メインコンテナ */
+.main-container {
+  padding: 1rem;
+}
+
+.main-title {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+/* 投稿フォーム */
+.post-form-container {
+  margin-bottom: 2rem;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.post-form-header {
+  background: linear-gradient(to right, #eff6ff, #eef2ff);
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.post-form-header-content {
+  display: flex;
+  align-items: center;
+}
+
+.post-form-icon-container {
+  flex-shrink: 0;
+}
+
+.post-form-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #2563eb;
+}
+
+.post-form-title {
+  margin-left: 0.75rem;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.post-form {
+  padding: 1.5rem;
+}
+
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-field-label {
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.form-field-label-content {
+  display: flex;
+  align-items: center;
+}
+
+.form-field-icon {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.25rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  color: #111827;
+  transition: all 0.15s ease-in-out;
+}
+
+.form-input:focus {
+  outline: none;
+  ring: 2px solid #3b82f6;
+  border-color: transparent;
+}
+
+.form-input::placeholder {
+  color: #6b7280;
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  color: #111827;
+  resize: none;
+  transition: all 0.15s ease-in-out;
+}
+
+.form-textarea:focus {
+  outline: none;
+  ring: 2px solid #3b82f6;
+  border-color: transparent;
+}
+
+.form-textarea::placeholder {
+  color: #6b7280;
+}
+
+.form-submit-container {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.form-submit-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background-color: #2563eb;
+  color: white;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.form-submit-button:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.form-submit-button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.form-submit-button:focus {
+  outline: none;
+  ring: 2px solid #3b82f6;
+  ring-offset: 2px;
+}
+
+.submit-spinner {
+  animation: spin 1s linear infinite;
+  margin-left: -0.25rem;
+  margin-right: 0.5rem;
+  height: 1rem;
+  width: 1rem;
+  color: white;
+}
+
+.submit-spinner-circle {
+  opacity: 0.25;
+}
+
+.submit-spinner-path {
+  opacity: 0.75;
+}
+
+.submit-icon {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.5rem;
+}
+
+/* ローディング状態 */
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+.loading-content {
+  text-align: center;
+}
+
+.loading-spinner {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+  border-radius: 50%;
+  height: 2rem;
+  width: 2rem;
+  border-bottom: 2px solid #2563eb;
+  margin-bottom: 1rem;
+}
+
+.loading-text {
+  color: #4b5563;
+}
+
+/* エラー状態 */
+.error-container {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.error-content {
+  display: flex;
+  align-items: center;
+}
+
+.error-icon-container {
+  flex-shrink: 0;
+}
+
+.error-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #dc2626;
+}
+
+.error-text-container {
+  margin-left: 0.75rem;
+}
+
+.error-title {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: #991b1b;
+}
+
+.error-message {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: #b91c1c;
+  margin-top: 0.25rem;
+}
+
+/* 投稿一覧 */
+.posts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.posts-title {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 1rem;
+}
+
+.posts-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .posts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .posts-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.post-card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease-in-out;
+}
+
+.post-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.post-card-content {
+  padding: 1.5rem;
+}
+
+.post-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.post-card-title {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.25;
+}
+
+.post-card-status-container {
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+
+.post-card-status-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: #34d399;
+  border-radius: 50%;
+}
+
+.post-card-body {
+  margin-bottom: 1rem;
+}
+
+.post-card-text {
+  color: #374151;
+  line-height: 1.625;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.post-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.post-card-time-container {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: #6b7280;
+}
+
+.post-card-time-icon {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.25rem;
+}
+
+.post-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.post-card-action-button {
+  padding: 0.25rem;
+  color: #9ca3af;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s ease-in-out;
+}
+
+.post-card-action-button:hover {
+  color: #4b5563;
+}
+
+.post-card-action-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* 投稿がない場合 */
+.no-posts-container {
+  text-align: center;
+  padding: 3rem 0;
+}
+
+.no-posts-content {
+  max-width: 24rem;
+  margin: 0 auto;
+}
+
+.no-posts-icon-container {
+  background-color: #f9fafb;
+  border-radius: 50%;
+  width: 4rem;
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+}
+
+.no-posts-icon {
+  width: 2rem;
+  height: 2rem;
+  color: #9ca3af;
+}
+
+.no-posts-title {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.no-posts-text {
+  color: #6b7280;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+</style>
