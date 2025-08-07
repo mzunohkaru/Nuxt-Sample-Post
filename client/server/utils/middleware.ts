@@ -28,7 +28,7 @@ export async function requireAuth(event: any) {
   const db = getDB();
   const userResult = await db.query(
     "SELECT id, username, email FROM users WHERE id = $1",
-    [payload.userId]
+    [payload.userId],
   );
 
   if (userResult.rows.length === 0) {

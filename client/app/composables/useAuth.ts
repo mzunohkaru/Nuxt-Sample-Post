@@ -13,7 +13,7 @@ const token = ref<string | null>(null);
 export const useAuth = () => {
   // 認証状態の初期化（クライアントサイドでのみ実行）
   const initAuth = () => {
-    if (process.client) {
+    if (import.meta.client) {
       const storedToken = localStorage.getItem("authToken");
       const storedUser = localStorage.getItem("user");
 
@@ -36,7 +36,7 @@ export const useAuth = () => {
     user.value = userData;
     token.value = authToken;
 
-    if (process.client) {
+    if (import.meta.client) {
       localStorage.setItem("authToken", authToken);
       localStorage.setItem("user", JSON.stringify(userData));
     }
@@ -47,7 +47,7 @@ export const useAuth = () => {
     user.value = null;
     token.value = null;
 
-    if (process.client) {
+    if (import.meta.client) {
       localStorage.removeItem("authToken");
       localStorage.removeItem("user");
     }
