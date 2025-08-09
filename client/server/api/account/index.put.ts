@@ -1,13 +1,8 @@
-import { getDB } from "../../utils/db";
+import { getDataSource } from "../../utils/typeorm";
 import { requireAuth } from "../../utils/middleware";
+import { User } from "../../entities/User";
 import type { H3Event } from "h3";
 
-// ユーザー情報の型定義
-interface User {
-  id: number;
-  username: string;
-  email: string;
-}
 
 // Zod や Valibot のようなバリデーションライブラリがないため、手動でバリデーション
 function validateBody(body: any) {
@@ -40,28 +35,31 @@ export default defineEventHandler(async (event: H3Event) => {
   const { username, email } = body;
 
   try {
-    const db = getDB();
+    const dataSource = await getDataSource();
+    const userRepository = dataSource.getRepository(User);
 
     // 3. データベースを更新
-    const result = await db.query(
-      `UPDATE users
-       SET username = $1, email = $2, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $3
-       RETURNING id, username, email`,
-      [username, email, user.id],
+    const result = await userRepository.update(
+      { id: user.id },
+      { username, email }
     );
 
-    if (result.rows.length === 0) {
+    if (result.affected === 0) {
       throw createError({
         statusCode: 404,
         statusMessage: "ユーザーが見つかりませんでした",
       });
     }
 
+    const updatedUser = await userRepository.findOne({
+      where: { id: user.id },
+      select: ["id", "username", "email"]
+    });
+
     // 4. 更新されたユーザー情報を返す
     return {
       success: true,
-      user: result.rows[0] as User,
+      user: updatedUser,
     };
 
   } catch (error: any) {

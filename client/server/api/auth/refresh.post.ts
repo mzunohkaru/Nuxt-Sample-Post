@@ -1,6 +1,7 @@
 import { getCookie } from "h3";
 import { verifyRefreshToken, generateAccessToken } from "../../utils/auth";
-import { getDB } from "../../utils/db";
+import { getDataSource } from "../../utils/typeorm";
+import { User } from "../../entities/User";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -23,20 +24,20 @@ export default defineEventHandler(async (event) => {
     }
 
     // 3. ユーザーがまだ存在するかデータベースで確認
-    const db = getDB();
-    const userResult = await db.query(
-      "SELECT id, username, email FROM users WHERE id = $1",
-      [payload.userId],
-    );
+    const dataSource = await getDataSource();
+    const userRepository = dataSource.getRepository(User);
+    
+    const user = await userRepository.findOne({
+      where: { id: payload.userId },
+      select: ["id", "username", "email"]
+    });
 
-    if (userResult.rows.length === 0) {
+    if (!user) {
       throw createError({
         statusCode: 401,
         statusMessage: "ユーザーが見つかりません",
       });
     }
-
-    const user = userResult.rows[0];
 
     // 4. 新しいアクセストークンを生成
     const newAccessToken = generateAccessToken(user);

@@ -19,6 +19,8 @@
     "jsonwebtoken": "^9.0.2",
     "nuxt": "^3.17.5",
     "pg": "^8.16.2",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.25",
     "vuex": "^4.1.0"
   },
   "devDependencies": {
@@ -26,6 +28,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/pg": "^8.15.4",
     "eslint": "^9.29.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vue-tsc": "^2.2.12"
   }
 }
