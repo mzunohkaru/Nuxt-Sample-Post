@@ -1,5 +1,6 @@
-import { getDB } from "../../utils/db";
+import { getDataSource } from "../../utils/typeorm";
 import { requireAuth } from "../../utils/middleware";
+import { Post } from "../../entities/Post";
 
 export default defineEventHandler(async (event) => {
   // 認証チェックとユーザー情報の取得
@@ -16,17 +17,20 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const db = getDB();
+    const dataSource = await getDataSource();
+    const postRepository = dataSource.getRepository(Post);
 
-    // 新しい投稿を挿入（認証されたユーザーIDを使用）
-    const result = await db.query(
-      "INSERT INTO posts (title, content, user_id) VALUES ($1, $2, $3) RETURNING *",
-      [body.title, body.content, user.id], // <-- Use authenticated user's ID
-    );
+    const newPost = postRepository.create({
+      title: body.title,
+      content: body.content,
+      user_id: user.id,
+    });
+
+    const savedPost = await postRepository.save(newPost);
 
     return {
       success: true,
-      data: result.rows[0],
+      data: savedPost,
     };
   } catch (error) {
     console.error("Error creating post:", error);

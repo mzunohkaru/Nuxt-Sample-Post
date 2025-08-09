@@ -1,9 +1,10 @@
-import { getDB } from "../../utils/db";
+import { getDataSource } from "../../utils/typeorm";
 import {
   hashPassword,
   generateAccessToken,
   generateRefreshToken,
 } from "../../utils/auth";
+import { User } from "../../entities/User";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -41,19 +42,18 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const db = getDB();
+    const dataSource = await getDataSource();
+    const userRepository = dataSource.getRepository(User);
 
     // 既存ユーザーのチェック（ユーザー名とメールアドレス）
-    const existingUserQuery = `
-      SELECT id FROM users 
-      WHERE username = $1 OR email = $2
-    `;
-    const existingUser = await db.query(existingUserQuery, [
-      body.username,
-      body.email,
-    ]);
+    const existingUser = await userRepository.findOne({
+      where: [
+        { username: body.username },
+        { email: body.email }
+      ]
+    });
 
-    if (existingUser.rows.length > 0) {
+    if (existingUser) {
       throw createError({
         statusCode: 409,
         statusMessage:
@@ -65,32 +65,27 @@ export default defineEventHandler(async (event) => {
     const hashedPassword = hashPassword(body.password);
 
     // ユーザーの作成
-    const insertQuery = `
-      INSERT INTO users (username, email, password_hash)
-      VALUES ($1, $2, $3)
-      RETURNING id, username, email, created_at
-    `;
-    const result = await db.query(insertQuery, [
-      body.username,
-      body.email,
-      hashedPassword,
-    ]);
+    const newUser = userRepository.create({
+      username: body.username,
+      email: body.email,
+      password_hash: hashedPassword,
+    });
 
-    const newUser = result.rows[0];
+    const savedUser = await userRepository.save(newUser);
 
     // 認証トークンの生成
-    const accessToken = generateAccessToken(newUser);
-    const refreshToken = generateRefreshToken(newUser);
+    const accessToken = generateAccessToken(savedUser);
+    const refreshToken = generateRefreshToken(savedUser);
 
     // レスポンスでパスワードハッシュは除外
     return {
       success: true,
       message: "ユーザー登録が完了しました",
       user: {
-        id: newUser.id,
-        username: newUser.username,
-        email: newUser.email,
-        created_at: newUser.created_at,
+        id: savedUser.id,
+        username: savedUser.username,
+        email: savedUser.email,
+        created_at: savedUser.created_at,
       },
       accessToken,
       refreshToken,

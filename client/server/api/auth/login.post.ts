@@ -1,10 +1,11 @@
-import { getDB } from "../../utils/db";
+import { getDataSource } from "../../utils/typeorm";
 import {
   verifyPassword,
   generateAccessToken,
   generateRefreshToken,
 } from "../../utils/auth";
 import { setCookie } from "h3";
+import { User } from "../../entities/User";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -18,22 +19,24 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const db = getDB();
+    const dataSource = await getDataSource();
+    const userRepository = dataSource.getRepository(User);
 
     // ユーザーを検索
-    const userResult = await db.query(
-      "SELECT id, username, email, password_hash FROM users WHERE username = $1 OR email = $1",
-      [body.username],
-    );
+    const user = await userRepository.findOne({
+      where: [
+        { username: body.username },
+        { email: body.username }
+      ],
+      select: ["id", "username", "email", "password_hash"]
+    });
 
-    if (userResult.rows.length === 0) {
+    if (!user) {
       throw createError({
         statusCode: 401,
         statusMessage: "ユーザー名またはパスワードが間違っています",
       });
     }
-
-    const user = userResult.rows[0];
 
     // パスワードを検証
     if (!verifyPassword(body.password, user.password_hash)) {

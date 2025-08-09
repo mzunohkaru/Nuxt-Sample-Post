@@ -17,6 +17,35 @@ export default defineNuxtConfig({
       "postgresql://postgres:postgres@localhost:5432/bulletin_board",
   },
 
+  typescript: {
+    typeCheck: false,
+    tsConfig: {
+      compilerOptions: {
+        experimentalDecorators: true,
+        emitDecoratorMetadata: true,
+      },
+    },
+  },
+
+  nitro: {
+    experimental: {
+      wasm: true,
+    },
+    esbuild: {
+      options: {
+        target: "esnext",
+      },
+    },
+    typescript: {
+      tsConfig: {
+        compilerOptions: {
+          experimentalDecorators: true,
+          emitDecoratorMetadata: true,
+        },
+      },
+    },
+  },
+
   future: {
     compatibilityVersion: 4,
   },

@@ -1,5 +1,6 @@
 import { verifyAccessToken } from "./auth"; // <-- Changed to verifyAccessToken
-import { getDB } from "./db";
+import { getDataSource } from "./typeorm";
+import { User } from "../entities/User";
 import type { H3Event } from "h3";
 
 /**
@@ -26,20 +27,20 @@ export async function requireAuth(event: H3Event) {
   }
 
   // ユーザーが存在するかチェック
-  const db = getDB();
-  const userResult = await db.query(
-    "SELECT id, username, email FROM users WHERE id = $1",
-    [payload.userId],
-  );
+  const dataSource = await getDataSource();
+  const userRepository = dataSource.getRepository(User);
+  
+  const user = await userRepository.findOne({
+    where: { id: payload.userId },
+    select: ["id", "username", "email"]
+  });
 
-  if (userResult.rows.length === 0) {
+  if (!user) {
     throw createError({
       statusCode: 401,
       statusMessage: "ユーザーが見つかりません",
     });
   }
-
-  const user = userResult.rows[0];
 
   // イベントコンテキストにユーザー情報を保存
   event.context.user = user;

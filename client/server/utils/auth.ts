@@ -1,7 +1,6 @@
 import { createHash, timingSafeEqual } from "crypto";
 import jwt from "jsonwebtoken";
-// @ts-ignore
-import type { User } from "~/types";
+import type { User } from "../entities/User";
 
 /**
  * パスワードをハッシュ化する

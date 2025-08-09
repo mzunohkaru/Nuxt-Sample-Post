@@ -1,20 +1,29 @@
-import { getDB } from "../../utils/db";
+import { getDataSource } from "../../utils/typeorm";
 import { requireAuth } from "../../utils/middleware";
+import { Post } from "../../entities/Post";
 
 export default defineEventHandler(async (event) => {
   // 認証チェック
   await requireAuth(event);
 
   try {
-    const db = getDB();
-
-    const result = await db.query(
-      "SELECT p.*, u.username FROM posts p JOIN users u ON p.user_id = u.id ORDER BY p.created_at DESC",
-    );
+    const dataSource = await getDataSource();
+    const postRepository = dataSource.getRepository(Post);
+    
+    const posts = await postRepository.find({
+      relations: ["user"],
+      order: { created_at: "DESC" },
+      select: {
+        user: { username: true }
+      }
+    });
 
     return {
       success: true,
-      data: result.rows,
+      data: posts.map(post => ({
+        ...post,
+        username: post.user.username
+      })),
     };
   } catch (error) {
     console.error("Error fetching posts:", error);
