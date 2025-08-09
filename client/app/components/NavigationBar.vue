@@ -1,16 +1,30 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
+import { useStore } from "vuex";
+import type { RootState } from "~/store";
 
-// 認証状態管理
-const { isAuthenticated, getCurrentUser, logout } = useAuth();
+// Vuexストアを取得
+const store = useStore<RootState>();
+
+// 認証状態とユーザー情報をストアから取得
+const isAuthenticated = computed(() => store.getters.isAuthenticated);
+const currentUser = computed(() => store.getters.currentUser);
 
 // モバイルメニューの状態
 const isMobileMenuOpen = ref(false);
 
 // ログアウト処理
-const handleLogout = () => {
-  logout();
-  navigateTo("/login");
+const handleLogout = async () => {
+  try {
+    await store.dispatch("logout");
+    closeMobileMenu();
+    await navigateTo("/login");
+  } catch (error) {
+    console.error("Logout failed:", error);
+    // エラーが発生してもログイン画面にリダイレクト
+    closeMobileMenu();
+    await navigateTo("/login");
+  }
 };
 
 // モバイルメニューの切り替え
@@ -38,15 +52,40 @@ const closeMobileMenu = () => {
       <div class="nav-desktop">
         <div class="nav-links">
           <NuxtLink to="/" class="nav-link" active-class="nav-link-active">
-            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+            <svg
+              class="nav-icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
+              />
             </svg>
             投稿一覧
           </NuxtLink>
 
-          <NuxtLink v-if="isAuthenticated" to="/account" class="nav-link" active-class="nav-link-active">
-            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          <NuxtLink
+            v-if="isAuthenticated"
+            to="/account"
+            class="nav-link"
+            active-class="nav-link-active"
+          >
+            <svg
+              class="nav-icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
             </svg>
             アカウント
           </NuxtLink>
@@ -54,12 +93,20 @@ const closeMobileMenu = () => {
 
         <!-- ユーザー情報とログアウト -->
         <div v-if="isAuthenticated" class="user-section">
-          <span class="welcome-text">
-            {{ getCurrentUser()?.username }}さん
-          </span>
+          <span class="welcome-text"> {{ currentUser?.username }}さん </span>
           <button class="logout-button" @click="handleLogout">
-            <svg class="logout-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            <svg
+              class="logout-icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
             </svg>
             ログアウト
           </button>
@@ -73,9 +120,26 @@ const closeMobileMenu = () => {
 
       <!-- モバイルメニューボタン -->
       <button class="mobile-menu-button" @click="toggleMobileMenu">
-        <svg class="mobile-menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path v-if="!isMobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-          <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        <svg
+          class="mobile-menu-icon"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            v-if="!isMobileMenuOpen"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"
+          />
+          <path
+            v-else
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
         </svg>
       </button>
     </div>
@@ -83,16 +147,47 @@ const closeMobileMenu = () => {
     <!-- モバイルメニュー -->
     <div v-if="isMobileMenuOpen" class="mobile-menu">
       <div class="mobile-nav-links">
-        <NuxtLink to="/" class="mobile-nav-link" active-class="mobile-nav-link-active" @click="closeMobileMenu">
-          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+        <NuxtLink
+          to="/"
+          class="mobile-nav-link"
+          active-class="mobile-nav-link-active"
+          @click="closeMobileMenu"
+        >
+          <svg
+            class="nav-icon"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
+            />
           </svg>
           投稿一覧
         </NuxtLink>
 
-        <NuxtLink v-if="isAuthenticated" to="/account" class="mobile-nav-link" active-class="mobile-nav-link-active" @click="closeMobileMenu">
-          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        <NuxtLink
+          v-if="isAuthenticated"
+          to="/account"
+          class="mobile-nav-link"
+          active-class="mobile-nav-link-active"
+          @click="closeMobileMenu"
+        >
+          <svg
+            class="nav-icon"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+            />
           </svg>
           アカウント
         </NuxtLink>
@@ -100,12 +195,20 @@ const closeMobileMenu = () => {
 
       <!-- モバイル用ユーザーセクション -->
       <div v-if="isAuthenticated" class="mobile-user-section">
-        <div class="mobile-welcome-text">
-          {{ getCurrentUser()?.username }}さん
-        </div>
+        <div class="mobile-welcome-text">{{ currentUser?.username }}さん</div>
         <button class="mobile-logout-button" @click="handleLogout">
-          <svg class="logout-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013 3v1" />
+          <svg
+            class="logout-icon"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+            />
           </svg>
           ログアウト
         </button>
@@ -113,7 +216,9 @@ const closeMobileMenu = () => {
 
       <!-- モバイル用未認証セクション -->
       <div v-else class="mobile-auth-section">
-        <NuxtLink to="/login" class="mobile-login-link" @click="closeMobileMenu">ログイン</NuxtLink>
+        <NuxtLink to="/login" class="mobile-login-link" @click="closeMobileMenu"
+          >ログイン</NuxtLink
+        >
       </div>
     </div>
   </nav>

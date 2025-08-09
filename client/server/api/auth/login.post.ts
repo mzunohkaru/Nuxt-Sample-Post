@@ -1,5 +1,10 @@
 import { getDB } from "../../utils/db";
-import { verifyPassword, generateAuthToken } from "../../utils/auth";
+import {
+  verifyPassword,
+  generateAccessToken,
+  generateRefreshToken,
+} from "../../utils/auth";
+import { setCookie } from "h3";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -38,8 +43,18 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    // 認証トークンを生成
-    const token = generateAuthToken(user.id);
+    // アクセストークンとリフレッシュトークンを生成
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    // リフレッシュトークンをHTTPOnlyクッキーに設定
+    setCookie(event, "refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // 本番環境ではtrue
+      sameSite: "strict",
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60, // 7日間
+    });
 
     // ログイン成功時のレスポンス
     return {
@@ -50,19 +65,17 @@ export default defineEventHandler(async (event) => {
           username: user.username,
           email: user.email,
         },
-        token,
+        accessToken,
       },
       message: "ログインに成功しました",
     };
   } catch (error) {
     console.error("Login error:", error);
 
-    // createErrorで作成されたエラーはそのまま投げる
     if (error && typeof error === "object" && "statusCode" in error) {
       throw error;
     }
 
-    // その他のエラー
     throw createError({
       statusCode: 500,
       statusMessage: "サーバーエラーが発生しました",

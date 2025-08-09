@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { ref, computed, onMounted } from "vue";
+import { useStore } from "vuex";
+import type { RootState } from "~/app/store";
 
-// 認証状態管理
-const { initAuth, getCurrentUser, requireAuth, updateUser } = useAuth();
-const user = getCurrentUser();
+// Vuexストアを取得
+const store = useStore<RootState>();
+
+// ユーザー情報をストアから取得
+const user = computed(() => store.getters.currentUser);
 
 // 編集モードの状態
 const isEditing = ref(false);
@@ -15,22 +19,19 @@ const notification = ref<{ type: "success" | "error"; message: string } | null>(
   null,
 );
 
-// 認証チェックとフォーム初期化
+// フォームの初期化
 onMounted(() => {
-  initAuth();
-  if (!requireAuth()) return;
-
-  if (user) {
-    editUsername.value = user.username;
-    editEmail.value = user.email;
+  if (user.value) {
+    editUsername.value = user.value.username;
+    editEmail.value = user.value.email;
   }
 });
 
 // 編集モードを開始
 function startEditing() {
-  if (user) {
-    editUsername.value = user.username;
-    editEmail.value = user.email;
+  if (user.value) {
+    editUsername.value = user.value.username;
+    editEmail.value = user.value.email;
     isEditing.value = true;
     notification.value = null; // 編集開始時に通知をクリア
   }
@@ -45,18 +46,21 @@ function cancelEditing() {
 async function handleUpdate() {
   notification.value = null; // 新しい操作の前に通知をクリア
 
-  const result = await updateUser(editUsername.value, editEmail.value);
+  try {
+    await store.dispatch("updateUser", {
+      newUsername: editUsername.value,
+      newEmail: editEmail.value,
+    });
 
-  if (result.success) {
     isEditing.value = false;
     notification.value = {
       type: "success",
       message: "ユーザー情報を更新しました。",
     };
-  } else {
+  } catch (error: any) {
     notification.value = {
       type: "error",
-      message: result.error || "更新に失敗しました。",
+      message: error.message || "更新に失敗しました。",
     };
   }
 }
@@ -130,6 +134,9 @@ async function handleUpdate() {
           </div>
         </form>
       </div>
+      <div v-else class="loading-state">
+        <p>ユーザー情報を読み込んでいます...</p>
+      </div>
 
       <!-- アクションセクション -->
       <div class="action-section">
@@ -199,6 +206,11 @@ async function handleUpdate() {
 }
 .user-info-section {
   padding: 2rem;
+}
+.loading-state {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
 }
 .info-grid {
   display: grid;

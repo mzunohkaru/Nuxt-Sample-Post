@@ -1,4 +1,7 @@
 import { createHash, timingSafeEqual } from "crypto";
+import jwt from "jsonwebtoken";
+// @ts-ignore
+import type { User } from "~/types";
 
 /**
  * パスワードをハッシュ化する
@@ -12,40 +15,73 @@ export function hashPassword(password: string): string {
  */
 export function verifyPassword(
   password: string,
-  hashedPassword: string,
+  hashedPassword: string
 ): boolean {
   const verifyHash = createHash("sha256").update(password).digest("hex");
 
   return timingSafeEqual(
     Buffer.from(hashedPassword, "hex"),
-    Buffer.from(verifyHash, "hex"),
+    Buffer.from(verifyHash, "hex")
   );
 }
 
-/**
- * 簡単なJWTのような認証トークンを生成する（開発用）
- */
-export function generateAuthToken(userId: number): string {
-  const payload = JSON.stringify({
-    userId,
-    exp: Date.now() + 24 * 60 * 60 * 1000, // 24時間
-  });
-  return Buffer.from(payload).toString("base64");
+// --- JWT-based Authentication ---
+
+// 環境変数からシークレットキーを取得
+// 注意: 実際のアプリケーションでは、これらのキーを.envファイルなどで安全に管理する必要があります。
+const ACCESS_TOKEN_SECRET =
+  process.env.ACCESS_TOKEN_SECRET || "your-access-token-secret-for-dev";
+const REFRESH_TOKEN_SECRET =
+  process.env.REFRESH_TOKEN_SECRET || "your-refresh-token-secret-for-dev";
+
+interface JwtPayload {
+  userId: number;
 }
 
 /**
- * 認証トークンを検証する
+ * アクセストークンを生成する
+ * @param user - ユーザーオブジェクト
+ * @returns アクセストークン
  */
-export function verifyAuthToken(
-  token: string,
-): { userId: number; exp: number } | null {
+export function generateAccessToken(user: Pick<User, "id">): string {
+  const payload: JwtPayload = { userId: user.id };
+  return jwt.sign(payload, ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
+}
+
+/**
+ * リフレッシュトークンを生成する
+ * @param user - ユーザーオブジェクト
+ * @returns リフレッシュトークン
+ */
+export function generateRefreshToken(user: Pick<User, "id">): string {
+  const payload: JwtPayload = { userId: user.id };
+  return jwt.sign(payload, REFRESH_TOKEN_SECRET, { expiresIn: "7d" });
+}
+
+/**
+ * アクセストークンを検証する
+ * @param token - アクセストークン
+ * @returns 検証されたペイロード、またはnull
+ */
+export function verifyAccessToken(token: string): JwtPayload | null {
   try {
-    const payload = JSON.parse(Buffer.from(token, "base64").toString());
-    if (payload.exp < Date.now()) {
-      return null; // トークンが期限切れ
-    }
-    return payload;
-  } catch {
+    return jwt.verify(token, ACCESS_TOKEN_SECRET) as JwtPayload;
+  } catch (error) {
+    console.error("Failed to verify access token:", error);
+    return null;
+  }
+}
+
+/**
+ * リフレッシュトークンを検証する
+ * @param token - リフレッシュトークン
+ * @returns 検証されたペイロード、またはnull
+ */
+export function verifyRefreshToken(token: string): JwtPayload | null {
+  try {
+    return jwt.verify(token, REFRESH_TOKEN_SECRET) as JwtPayload;
+  } catch (error) {
+    console.error("Failed to verify refresh token:", error);
     return null;
   }
 }

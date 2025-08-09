@@ -1,23 +1,62 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
+// @ts-ignore
+import { useStore } from "vuex";
+import type { RootState } from "~/store";
 import PostForm from "~/components/PostForm.vue";
 import PostList from "~/components/PostList.vue";
 import LoadingState from "~/components/LoadingState.vue";
 import ErrorState from "~/components/ErrorState.vue";
 import EmptyState from "~/components/EmptyState.vue";
+import { ofetch } from "ofetch";
 
-// 認証状態管理 - isAuthenticatedとhandleLogoutを削除
-const { initAuth, getCurrentUser, requireAuth } = useAuth();
+// Vuexストアを取得
+const store = useStore<RootState>();
 
-// 認証チェック
-onMounted(() => {
-  initAuth();
-  if (!requireAuth()) {
-    return;
+// 認証トークンを取得
+const accessToken = computed(() => store.getters.accessToken);
+
+// データ状態
+const data = ref<any>(null);
+const pending = ref(false);
+const error = ref<any>(null);
+
+// 認証ヘッダーを生成する関数
+const getAuthHeaders = () => {
+  const headers: Record<string, string> = {};
+  if (accessToken.value) {
+    headers.Authorization = `Bearer ${accessToken.value}`;
   }
-});
+  return headers;
+};
 
-const { data, pending, error, refresh } = await useFetch("/api/posts");
+// 投稿データを取得する関数
+const fetchPosts = async () => {
+  pending.value = true;
+  error.value = null;
+
+  try {
+    const response = await ofetch("/api/posts", {
+      headers: getAuthHeaders(),
+    });
+    data.value = response;
+  } catch (err) {
+    console.error("投稿の取得中にエラーが発生しました:", err);
+    error.value = err;
+  } finally {
+    pending.value = false;
+  }
+};
+
+// リフレッシュ関数
+const refresh = async () => {
+  await fetchPosts();
+};
+
+// コンポーネントがマウントされたときに投稿を取得
+onMounted(async () => {
+  await fetchPosts();
+});
 
 const isSubmitting = ref(false);
 
@@ -29,23 +68,20 @@ const handleSubmitPost = async (postData: {
   isSubmitting.value = true;
 
   try {
-    const currentUser = getCurrentUser();
-    const response = await $fetch("/api/posts", {
+    // user_idはサーバーサイドで認証情報から取得するため、送信不要
+    await ofetch("/api/posts", {
       method: "POST",
+      headers: getAuthHeaders(),
       body: {
         title: postData.title,
         content: postData.content,
-        user_id: currentUser?.id || 1,
       },
     });
 
-    if (response.success) {
-      // 投稿リストを更新
-      await refresh();
-      alert("投稿が正常に作成されました！");
-    }
-  } catch (error) {
-    console.error("投稿の作成中にエラーが発生しました:", error);
+    // 投稿リストを更新
+    await refresh();
+  } catch (err) {
+    console.error("投稿の作成中にエラーが発生しました:", err);
     alert("投稿の作成に失敗しました。もう一度お試しください。");
   } finally {
     isSubmitting.value = false;
@@ -67,7 +103,10 @@ const handleSubmitPost = async (postData: {
     <LoadingState v-if="pending" message="投稿を読み込み中..." />
 
     <!-- エラー状態 -->
-    <ErrorState v-else-if="error" :message="error.message" />
+    <ErrorState
+      v-else-if="error"
+      :message="error.data?.statusMessage || '投稿の読み込みに失敗しました'"
+    />
 
     <div v-else>
       <!-- 投稿一覧 -->

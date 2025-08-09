@@ -1,11 +1,11 @@
-import { verifyAuthToken } from "./auth";
+import { verifyAccessToken } from "./auth"; // <-- Changed to verifyAccessToken
 import { getDB } from "./db";
+import type { H3Event } from "h3";
 
 /**
  * 認証が必要なAPIのミドルウェア
  */
 export async function requireAuth(event: H3Event) {
-  // any から H3Event に変更
   const authHeader = getHeader(event, "authorization");
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -16,12 +16,12 @@ export async function requireAuth(event: H3Event) {
   }
 
   const token = authHeader.substring(7); // "Bearer " を除去
-  const payload = verifyAuthToken(token);
+  const payload = verifyAccessToken(token); // <-- Changed to verifyAccessToken
 
   if (!payload) {
     throw createError({
       statusCode: 401,
-      statusMessage: "無効な認証トークンです",
+      statusMessage: "無効または期限切れの認証トークンです", // <-- Message updated
     });
   }
 
@@ -39,7 +39,10 @@ export async function requireAuth(event: H3Event) {
     });
   }
 
-  // イベントにユーザー情報を追加
-  event.context.user = userResult.rows[0];
-  return userResult.rows[0];
+  const user = userResult.rows[0];
+
+  // イベントコンテキストにユーザー情報を保存
+  event.context.user = user;
+
+  return user;
 }

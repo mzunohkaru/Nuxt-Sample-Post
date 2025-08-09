@@ -86,7 +86,11 @@ export class ApiError extends Error {
 export const isSuccessResponse = <T>(
   response: unknown, // any から unknown に変更
 ): response is ApiResponse<T> => {
-  return response && typeof response === "object" && response.success === true;
+  return (
+    response &&
+    typeof response === "object" &&
+    (response as ApiResponse<T>).success === true
+  );
 };
 
 /**
@@ -95,5 +99,9 @@ export const isSuccessResponse = <T>(
 export const isErrorResponse = (
   response: unknown, // any から unknown に変更
 ): response is ApiResponse<never> => {
-  return response && typeof response === "object" && response.success === false;
+  return (
+    response &&
+    typeof response === "object" &&
+    (response as ApiResponse<never>).success === false
+  );
 };
