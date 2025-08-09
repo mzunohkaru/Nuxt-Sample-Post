@@ -1,15 +1,22 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
+import { useStore } from "vuex";
+import type { RootState } from "~/app/store";
 
-// 認証状態管理
-const { isAuthenticated, getCurrentUser, logout } = useAuth();
+// Vuexストアを取得
+const store = useStore<RootState>();
+
+// 認証状態とユーザー情報をストアから取得
+const isAuthenticated = computed(() => store.getters.isAuthenticated);
+const currentUser = computed(() => store.getters.currentUser);
 
 // モバイルメニューの状態
 const isMobileMenuOpen = ref(false);
 
 // ログアウト処理
 const handleLogout = () => {
-  logout();
+  store.dispatch("logout");
+  closeMobileMenu();
   navigateTo("/login");
 };
 
@@ -55,7 +62,7 @@ const closeMobileMenu = () => {
         <!-- ユーザー情報とログアウト -->
         <div v-if="isAuthenticated" class="user-section">
           <span class="welcome-text">
-            {{ getCurrentUser()?.username }}さん
+            {{ currentUser?.username }}さん
           </span>
           <button class="logout-button" @click="handleLogout">
             <svg class="logout-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,11 +108,11 @@ const closeMobileMenu = () => {
       <!-- モバイル用ユーザーセクション -->
       <div v-if="isAuthenticated" class="mobile-user-section">
         <div class="mobile-welcome-text">
-          {{ getCurrentUser()?.username }}さん
+          {{ currentUser?.username }}さん
         </div>
         <button class="mobile-logout-button" @click="handleLogout">
           <svg class="logout-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013 3v1" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
           ログアウト
         </button>

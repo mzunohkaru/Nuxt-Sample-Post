@@ -262,19 +262,6 @@ export interface ApiCallState<T = unknown> {
 // ===== Composables型 =====
 
 /**
- * useAuth composableの戻り値
- */
-export interface UseAuthReturn {
-  user: Ref<User | null>;
-  isAuthenticated: Ref<boolean>;
-  isLoading: Ref<boolean>;
-  login: (credentials: LoginRequest) => Promise<void>;
-  register: (userData: RegisterRequest) => Promise<void>;
-  logout: () => Promise<void>;
-  checkAuth: () => Promise<void>;
-}
-
-/**
  * usePosts composableの戻り値
  */
 export interface UsePostsReturn {

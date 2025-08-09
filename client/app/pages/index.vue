@@ -1,22 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import PostForm from "~/components/PostForm.vue";
 import PostList from "~/components/PostList.vue";
 import LoadingState from "~/components/LoadingState.vue";
 import ErrorState from "~/components/ErrorState.vue";
 import EmptyState from "~/components/EmptyState.vue";
 
-// 認証状態管理 - isAuthenticatedとhandleLogoutを削除
-const { initAuth, getCurrentUser, requireAuth } = useAuth();
-
-// 認証チェック
-onMounted(() => {
-  initAuth();
-  if (!requireAuth()) {
-    return;
-  }
-});
-
+// useFetchで投稿データを取得（トークンはインターセプターで自動付与される想定）
 const { data, pending, error, refresh } = await useFetch("/api/posts");
 
 const isSubmitting = ref(false);
@@ -29,23 +19,20 @@ const handleSubmitPost = async (postData: {
   isSubmitting.value = true;
 
   try {
-    const currentUser = getCurrentUser();
-    const response = await $fetch("/api/posts", {
+    // user_idはサーバーサイドで認証情報から取得するため、送信不要
+    await $fetch("/api/posts", {
       method: "POST",
       body: {
         title: postData.title,
         content: postData.content,
-        user_id: currentUser?.id || 1,
       },
     });
 
-    if (response.success) {
-      // 投稿リストを更新
-      await refresh();
-      alert("投稿が正常に作成されました！");
-    }
-  } catch (error) {
-    console.error("投稿の作成中にエラーが発生しました:", error);
+    // 投稿リストを更新
+    await refresh();
+
+  } catch (err) {
+    console.error("投稿の作成中にエラーが発生しました:", err);
     alert("投稿の作成に失敗しました。もう一度お試しください。");
   } finally {
     isSubmitting.value = false;
@@ -67,7 +54,7 @@ const handleSubmitPost = async (postData: {
     <LoadingState v-if="pending" message="投稿を読み込み中..." />
 
     <!-- エラー状態 -->
-    <ErrorState v-else-if="error" :message="error.message" />
+    <ErrorState v-else-if="error" :message="error.data?.statusMessage || '投稿の読み込みに失敗しました'" />
 
     <div v-else>
       <!-- 投稿一覧 -->

@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import type { User } from "~~/types";
+import { ref, onMounted, computed } from "vue";
+import { useStore } from "vuex";
+import type { RootState } from "~/app/store";
 
-// 認証管理
-const { login, isAuthenticated, initAuth } = useAuth();
+// Vuexストアを取得
+const store = useStore<RootState>();
+
+// 認証状態をストアから取得
+const isAuthenticated = computed(() => store.getters.isAuthenticated);
 
 // 既にログイン済みの場合はホームにリダイレクト
 onMounted(() => {
-  initAuth();
   if (isAuthenticated.value) {
     navigateTo("/");
   }
@@ -35,35 +38,18 @@ const handleLogin = async () => {
   errorMessage.value = "";
 
   try {
-    const response = await $fetch("/api/auth/login", {
-      method: "POST",
-      body: {
-        username: formData.value.username,
-        password: formData.value.password,
-      },
+    // Vuexのloginアクションを呼び出す
+    await store.dispatch("login", {
+      username: formData.value.username,
+      password: formData.value.password,
     });
 
-    if (response.success) {
-      // 認証状態を更新
-      login(response.data.user as User, response.data.token);
+    // ログイン成功後、ホームページにリダイレクト
+    await navigateTo("/");
 
-      // ホームページにリダイレクト
-      await navigateTo("/");
-    }
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("Login error:", error);
-    if (error && typeof error === "object" && "statusCode" in error) {
-      const err = error as { statusCode: number };
-      if (err.statusCode === 401) {
-        errorMessage.value = "ユーザー名またはパスワードが間違っています";
-      } else if (err.statusCode === 400) {
-        errorMessage.value = "ユーザー名とパスワードが必要です";
-      } else {
-        errorMessage.value = "ログインに失敗しました。もう一度お試しください。";
-      }
-    } else {
-      errorMessage.value = "ログインに失敗しました。もう一度お試しください。";
-    }
+    errorMessage.value = error.data?.statusMessage || "ログインに失敗しました。もう一度お試しください。";
   } finally {
     isSubmitting.value = false;
   }

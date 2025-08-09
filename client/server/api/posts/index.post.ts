@@ -1,6 +1,10 @@
 import { getDB } from "../../utils/db";
+import { requireAuth } from "../../utils/middleware";
 
 export default defineEventHandler(async (event) => {
+  // 認証チェックとユーザー情報の取得
+  const user = await requireAuth(event);
+
   try {
     const body = await readBody(event);
 
@@ -14,13 +18,10 @@ export default defineEventHandler(async (event) => {
 
     const db = getDB();
 
-    // データベース接続をテスト
-    await db.query("SELECT 1");
-
-    // 新しい投稿を挿入
+    // 新しい投稿を挿入（認証されたユーザーIDを使用）
     const result = await db.query(
       "INSERT INTO posts (title, content, user_id) VALUES ($1, $2, $3) RETURNING *",
-      [body.title, body.content, body.user_id || 1],
+      [body.title, body.content, user.id], // <-- Use authenticated user's ID
     );
 
     return {
@@ -30,10 +31,14 @@ export default defineEventHandler(async (event) => {
   } catch (error) {
     console.error("Error creating post:", error);
 
-    // より詳細なエラー情報を提供
-    let errorMessage = "Failed to create post";
+    // requireAuthからのエラーはそのままスロー
+    if (error && typeof error === "object" && "statusCode" in error) {
+      throw error;
+    }
+
+    let errorMessage = "投稿の作成に失敗しました";
     if (error instanceof Error) {
-      errorMessage = `Database error: ${error.message}`;
+      errorMessage = `データベースエラー: ${error.message}`;
     }
 
     throw createError({

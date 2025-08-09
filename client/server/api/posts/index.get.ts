@@ -1,11 +1,12 @@
 import { getDB } from "../../utils/db";
+import { requireAuth } from "../../utils/middleware";
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
+  // 認証チェック
+  await requireAuth(event);
+
   try {
     const db = getDB();
-
-    // データベース接続をテスト
-    await db.query("SELECT 1");
 
     const result = await db.query(
       "SELECT p.*, u.username FROM posts p JOIN users u ON p.user_id = u.id ORDER BY p.created_at DESC",
@@ -18,10 +19,14 @@ export default defineEventHandler(async () => {
   } catch (error) {
     console.error("Error fetching posts:", error);
 
-    // より詳細なエラー情報を提供
-    let errorMessage = "Failed to fetch posts";
+    let errorMessage = "投稿の取得に失敗しました";
     if (error instanceof Error) {
-      errorMessage = `Database error: ${error.message}`;
+      errorMessage = `データベースエラー: ${error.message}`;
+    }
+
+    // requireAuthからのエラーはそのままスロー
+    if (error && typeof error === "object" && "statusCode" in error) {
+      throw error;
     }
 
     throw createError({
