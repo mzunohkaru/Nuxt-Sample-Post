@@ -19,6 +19,12 @@ export default defineNuxtConfig({
 
   typescript: {
     typeCheck: false,
+    tsConfig: {
+      compilerOptions: {
+        experimentalDecorators: true,
+        emitDecoratorMetadata: true,
+      },
+    },
   },
 
   nitro: {
@@ -28,6 +34,14 @@ export default defineNuxtConfig({
     esbuild: {
       options: {
         target: "esnext",
+      },
+    },
+    typescript: {
+      tsConfig: {
+        compilerOptions: {
+          experimentalDecorators: true,
+          emitDecoratorMetadata: true,
+        },
       },
     },
   },

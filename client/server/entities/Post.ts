@@ -1,5 +1,13 @@
 import "reflect-metadata";
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from "typeorm";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from "typeorm";
 import { User } from "./User";
 
 @Entity("posts")
@@ -22,7 +30,7 @@ export class Post {
   @UpdateDateColumn()
   updated_at!: Date;
 
-  @ManyToOne(() => User, user => user.posts)
+  @ManyToOne(() => User, (user) => user.posts)
   @JoinColumn({ name: "user_id" })
-  user: User;
+  user!: User;
 }

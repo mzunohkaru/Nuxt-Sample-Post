@@ -7,11 +7,13 @@ let dataSource: DataSource | null = null;
 
 export async function getDataSource() {
   if (!dataSource) {
-    const config = useRuntimeConfig();
-    
+    const databaseUrl =
+      process.env.DATABASE_URL ||
+      "postgresql://postgres:postgres@localhost:5432/bulletin_board";
+
     dataSource = new DataSource({
       type: "postgres",
-      url: config.databaseUrl,
+      url: databaseUrl,
       entities: [User, Post],
       synchronize: false,
       logging: process.env.NODE_ENV === "development",
