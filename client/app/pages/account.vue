@@ -58,7 +58,7 @@ async function handleUpdate() {
       message: "ユーザー情報を更新しました。",
     };
   } catch (error: any) {
-     notification.value = {
+    notification.value = {
       type: "error",
       message: error.message || "更新に失敗しました。",
     };

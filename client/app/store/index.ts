@@ -1,4 +1,6 @@
+// @ts-nocheck
 import { createStore } from "vuex";
+// @ts-ignore
 import type { User } from "~/types";
 import { ofetch } from "ofetch";
 
@@ -10,40 +12,76 @@ export interface RootState {
   authReady: boolean; // 認証初期化完了フラグ
 }
 
+// localStorageからアクセストークンを取得
+const getStoredToken = (): string | null => {
+  if (import.meta.client) {
+    try {
+      return localStorage.getItem("accessToken");
+    } catch (e) {
+      console.warn("Failed to get stored token:", e);
+      return null;
+    }
+  }
+  return null;
+};
+
+// localStorageにアクセストークンを保存
+const setStoredToken = (token: string | null): void => {
+  if (import.meta.client) {
+    try {
+      if (token) {
+        localStorage.setItem("accessToken", token);
+      } else {
+        localStorage.removeItem("accessToken");
+      }
+    } catch (e) {
+      console.warn("Failed to store token:", e);
+    }
+  }
+};
+
 // Vuexストアを作成
 export const store = createStore<RootState>({
   state: (): RootState => ({
-    accessToken: null,
+    accessToken: getStoredToken(), // 初期化時にlocalStorageから復元
     user: null,
-    isAuthenticated: false,
+    isAuthenticated: !!getStoredToken(), // トークンの存在で初期認証状態を決定
     isRefreshing: false,
     authReady: false,
   }),
 
   mutations: {
-    setToken(state, accessToken: string | null) { // nullを許容
+    setToken(state: RootState, accessToken: string | null) {
+      // nullを許容
       state.accessToken = accessToken;
       state.isAuthenticated = !!accessToken;
+      // localStorageにも保存
+      setStoredToken(accessToken);
     },
-    setRefreshing(state, isRefreshing: boolean) {
+    setRefreshing(state: RootState, isRefreshing: boolean) {
       state.isRefreshing = isRefreshing;
     },
-    setAuthReady(state, isReady: boolean) {
+    setAuthReady(state: RootState, isReady: boolean) {
       state.authReady = isReady;
     },
-    setUser(state, user: User) {
+    setUser(state: RootState, user: User) {
       state.user = user;
     },
-    clearAuth(state) {
+    clearAuth(state: RootState) {
       state.accessToken = null;
       state.user = null;
       state.isAuthenticated = false;
+      // localStorageからも削除
+      setStoredToken(null);
     },
   },
 
   actions: {
     // ログインアクション
-    async login({ commit }, { username, password }) {
+    async login(
+      { commit }: { commit: any },
+      { username, password }: { username: string; password: string },
+    ) {
       // インターセプターをバイパスするため、ofetchを直接使用
       const { data } = await ofetch("/api/auth/login", {
         method: "POST",
@@ -57,14 +95,27 @@ export const store = createStore<RootState>({
     },
 
     // ログアウトアクション
-    logout({ commit }) {
-      commit("clearAuth");
-      // TODO: サーバーサイドのログアウトエンドポイントを呼び出す（必要であれば）
+    async logout({ commit }: { commit: any }) {
+      try {
+        // サーバー側のログアウトAPIを呼び出してリフレッシュトークンクッキーを削除
+        await ofetch("/api/auth/logout", {
+          method: "POST",
+        });
+      } catch (error) {
+        // サーバー側のログアウトが失敗してもクライアント側の処理は実行する
+        console.warn("Server logout failed:", error);
+      } finally {
+        // クライアント側の認証情報をクリア
+        commit("clearAuth");
+      }
     },
 
     // ユーザー情報更新アクション
-    async updateUser({ commit }, { newUsername, newEmail }) {
-      const { success, user, error } = await $fetch("/api/account", {
+    async updateUser(
+      { commit }: { commit: any },
+      { newUsername, newEmail }: { newUsername: string; newEmail: string },
+    ) {
+      const { success, user, error } = await ofetch("/api/account", {
         method: "PUT",
         body: { username: newUsername, email: newEmail },
       });
@@ -78,29 +129,35 @@ export const store = createStore<RootState>({
     },
 
     // ユーザー情報を取得するアクション
-    async fetchUser({ commit }) {
+    async fetchUser({ commit, state }: { commit: any; state: RootState }) {
       try {
-        const { data } = await $fetch("/api/auth/me", {
-          headers: {
-            // トークン付与はインターセプターで行う
-          },
+        const headers: Record<string, string> = {};
+        if (state.accessToken) {
+          headers.Authorization = `Bearer ${state.accessToken}`;
+        }
+
+        const { data } = await ofetch("/api/auth/me", {
+          headers,
         });
         if (data && data.user) {
           commit("setUser", data.user);
+          return true; // 成功を示す
         }
+        return false;
       } catch (error) {
         commit("clearAuth");
         console.error("Failed to fetch user", error);
+        return false;
       }
     },
 
     // トークンをリフレッシュするアクション
-    async refreshToken({ commit, state }) {
+    async refreshToken({ commit, state }: { commit: any; state: RootState }) {
       if (state.isRefreshing) {
         // 既にリフレッシュ中の場合は待機
         return new Promise((resolve) => {
-          const unsubscribe = store.subscribe((mutation, state) => {
-            if (mutation.type === 'setRefreshing' && !state.isRefreshing) {
+          const unsubscribe = store.subscribe((mutation: any, state: any) => {
+            if (mutation.type === "setRefreshing" && !state.isRefreshing) {
               unsubscribe();
               resolve(state.accessToken);
             }
@@ -111,9 +168,12 @@ export const store = createStore<RootState>({
       commit("setRefreshing", true);
 
       try {
-        const response = await $fetch<{ accessToken: string }>("/api/auth/refresh", {
-          method: "POST",
-        });
+        const response = await ofetch<{ accessToken: string }>(
+          "/api/auth/refresh",
+          {
+            method: "POST",
+          },
+        );
 
         if (response.accessToken) {
           commit("setToken", response.accessToken);
@@ -121,7 +181,6 @@ export const store = createStore<RootState>({
         }
         // トークンが取得できなかった場合はログアウト
         throw new Error("New access token not received");
-
       } catch (error) {
         // リフレッシュに失敗した場合はログアウト
         commit("clearAuth");
@@ -133,14 +192,47 @@ export const store = createStore<RootState>({
     },
 
     // アプリケーション初期化時の認証状態確認アクション
-    async initAuth({ commit, dispatch }) {
-      if (process.server) return; // サーバーサイドでは実行しない
+    async initAuth({
+      commit,
+      dispatch,
+      state,
+    }: {
+      commit: any;
+      dispatch: any;
+      state: RootState;
+    }) {
+      if (import.meta.server) return; // サーバーサイドでは実行しない
 
       try {
-        await dispatch("fetchUser");
+        // localStorageからトークンが復元されている場合
+        if (state.accessToken) {
+          // ユーザー情報を取得してトークンの有効性を確認
+          const userFetched = await dispatch("fetchUser");
+
+          if (!userFetched) {
+            // トークンが無効な場合、リフレッシュを試行
+            console.log("Access token invalid, trying to refresh...");
+            const newToken = await dispatch("refreshToken");
+
+            if (newToken) {
+              // リフレッシュ成功後、ユーザー情報を再取得
+              await dispatch("fetchUser");
+            }
+          }
+        } else {
+          // トークンがない場合、リフレッシュを試行（リフレッシュトークンがある可能性）
+          console.log("No access token found, trying to refresh...");
+          const newToken = await dispatch("refreshToken");
+
+          if (newToken) {
+            // リフレッシュ成功後、ユーザー情報を取得
+            await dispatch("fetchUser");
+          }
+        }
       } catch (e) {
         // 失敗してもエラーにはしない（単に未認証状態になるだけ）
-        console.log("Not authenticated on init.");
+        console.log("Authentication initialization failed:", e);
+        commit("clearAuth");
       } finally {
         commit("setAuthReady", true);
       }

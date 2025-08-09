@@ -48,7 +48,7 @@ export default defineEventHandler(async (event: H3Event) => {
        SET username = $1, email = $2, updated_at = CURRENT_TIMESTAMP
        WHERE id = $3
        RETURNING id, username, email`,
-      [username, email, user.id]
+      [username, email, user.id],
     );
 
     if (result.rows.length === 0) {
@@ -66,15 +66,15 @@ export default defineEventHandler(async (event: H3Event) => {
 
   } catch (error: any) {
     // 5. エラーハンドリング (特に一意性制約違反)
-    if (error.code === '23505') { // PostgreSQLのunique_violationエラーコード
-      const detail = error.detail || '';
-      if (detail.includes('users_username_key')) {
+    if (error.code === "23505") { // PostgreSQLのunique_violationエラーコード
+      const detail = error.detail || "";
+      if (detail.includes("users_username_key")) {
         throw createError({
           statusCode: 409, // Conflict
           statusMessage: "このユーザー名は既に使用されています",
         });
       }
-      if (detail.includes('users_email_key')) {
+      if (detail.includes("users_email_key")) {
         throw createError({
           statusCode: 409, // Conflict
           statusMessage: "このメールアドレスは既に使用されています",

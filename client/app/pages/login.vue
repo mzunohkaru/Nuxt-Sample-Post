@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
 import { useStore } from "vuex";
-import type { RootState } from "~/app/store";
+import type { RootState } from "~/store";
 
 // Vuexストアを取得
 const store = useStore<RootState>();
@@ -46,10 +46,11 @@ const handleLogin = async () => {
 
     // ログイン成功後、ホームページにリダイレクト
     await navigateTo("/");
-
   } catch (error: any) {
     console.error("Login error:", error);
-    errorMessage.value = error.data?.statusMessage || "ログインに失敗しました。もう一度お試しください。";
+    errorMessage.value =
+      error.data?.statusMessage ||
+      "ログインに失敗しました。もう一度お試しください。";
   } finally {
     isSubmitting.value = false;
   }
@@ -118,9 +119,10 @@ const handleKeydown = (event: KeyboardEvent) => {
       <!-- 登録リンク -->
       <div class="register-link">
         <p>アカウントをお持ちでない場合</p>
-        <NuxtLink to="/register" class="register-link-text"
+        <!-- TODO: register ページを作成したら有効化 -->
+        <!-- <NuxtLink to="/register" class="register-link-text"
           >新規登録はこちら</NuxtLink
-        >
+        > -->
       </div>
     </div>
   </div>

@@ -1,5 +1,6 @@
 import { createHash, timingSafeEqual } from "crypto";
 import jwt from "jsonwebtoken";
+// @ts-ignore
 import type { User } from "~/types";
 
 /**
@@ -14,13 +15,13 @@ export function hashPassword(password: string): string {
  */
 export function verifyPassword(
   password: string,
-  hashedPassword: string,
+  hashedPassword: string
 ): boolean {
   const verifyHash = createHash("sha256").update(password).digest("hex");
 
   return timingSafeEqual(
     Buffer.from(hashedPassword, "hex"),
-    Buffer.from(verifyHash, "hex"),
+    Buffer.from(verifyHash, "hex")
   );
 }
 
@@ -28,8 +29,10 @@ export function verifyPassword(
 
 // 環境変数からシークレットキーを取得
 // 注意: 実際のアプリケーションでは、これらのキーを.envファイルなどで安全に管理する必要があります。
-const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "your-access-token-secret-for-dev";
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || "your-refresh-token-secret-for-dev";
+const ACCESS_TOKEN_SECRET =
+  process.env.ACCESS_TOKEN_SECRET || "your-access-token-secret-for-dev";
+const REFRESH_TOKEN_SECRET =
+  process.env.REFRESH_TOKEN_SECRET || "your-refresh-token-secret-for-dev";
 
 interface JwtPayload {
   userId: number;
@@ -64,6 +67,7 @@ export function verifyAccessToken(token: string): JwtPayload | null {
   try {
     return jwt.verify(token, ACCESS_TOKEN_SECRET) as JwtPayload;
   } catch (error) {
+    console.error("Failed to verify access token:", error);
     return null;
   }
 }
@@ -77,6 +81,7 @@ export function verifyRefreshToken(token: string): JwtPayload | null {
   try {
     return jwt.verify(token, REFRESH_TOKEN_SECRET) as JwtPayload;
   } catch (error) {
+    console.error("Failed to verify refresh token:", error);
     return null;
   }
 }

@@ -1,8 +1,8 @@
 -- ユーザーサンプルデータの挿入（postsテーブルより先に作成）
--- パスワード: password123 (admin), userpass1 (user1), testpass (testuser)
+-- パスワード: admin (admin), password (user), password (test)
 INSERT INTO users (username, email, password_hash) VALUES 
     ('admin', 'admin@example.com', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'),
-    ('user1', 'user1@example.com', '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'),
+    ('user', 'user@example.com', '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'),
     ('test', 'test@example.com', '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8');
 
 -- サンプルデータの挿入（user_idを含む）

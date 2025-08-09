@@ -1,5 +1,9 @@
 import { getDB } from "../../utils/db";
-import { hashPassword, generateAuthToken } from "../../utils/auth";
+import {
+  hashPassword,
+  generateAccessToken,
+  generateRefreshToken,
+} from "../../utils/auth";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -75,7 +79,8 @@ export default defineEventHandler(async (event) => {
     const newUser = result.rows[0];
 
     // 認証トークンの生成
-    const token = generateAuthToken(newUser.id);
+    const accessToken = generateAccessToken(newUser);
+    const refreshToken = generateRefreshToken(newUser);
 
     // レスポンスでパスワードハッシュは除外
     return {
@@ -87,7 +92,8 @@ export default defineEventHandler(async (event) => {
         email: newUser.email,
         created_at: newUser.created_at,
       },
-      token,
+      accessToken,
+      refreshToken,
     };
   } catch (error) {
     console.error("ユーザー登録エラー:", error);
