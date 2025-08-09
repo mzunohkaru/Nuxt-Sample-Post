@@ -50,12 +50,17 @@ const handleLogin = async () => {
       // ホームページにリダイレクト
       await navigateTo("/");
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Login error:", error);
-    if (error.statusCode === 401) {
-      errorMessage.value = "ユーザー名またはパスワードが間違っています";
-    } else if (error.statusCode === 400) {
-      errorMessage.value = "ユーザー名とパスワードが必要です";
+    if (error && typeof error === "object" && "statusCode" in error) {
+      const err = error as { statusCode: number };
+      if (err.statusCode === 401) {
+        errorMessage.value = "ユーザー名またはパスワードが間違っています";
+      } else if (err.statusCode === 400) {
+        errorMessage.value = "ユーザー名とパスワードが必要です";
+      } else {
+        errorMessage.value = "ログインに失敗しました。もう一度お試しください。";
+      }
     } else {
       errorMessage.value = "ログインに失敗しました。もう一度お試しください。";
     }
@@ -83,7 +88,7 @@ const handleKeydown = (event: KeyboardEvent) => {
       </div>
 
       <!-- ログインフォーム -->
-      <form @submit.prevent="handleLogin" class="login-form">
+      <form class="login-form" @submit.prevent="handleLogin">
         <div class="form-group">
           <label for="username" class="form-label"
             >ユーザー名またはメールアドレス</label
@@ -95,8 +100,8 @@ const handleKeydown = (event: KeyboardEvent) => {
             class="form-input"
             placeholder="ユーザー名またはメールアドレスを入力"
             :disabled="isSubmitting"
-            @keydown="handleKeydown"
             autocomplete="username"
+            @keydown="handleKeydown"
           />
         </div>
 
@@ -109,8 +114,8 @@ const handleKeydown = (event: KeyboardEvent) => {
             class="form-input"
             placeholder="パスワードを入力"
             :disabled="isSubmitting"
-            @keydown="handleKeydown"
             autocomplete="current-password"
+            @keydown="handleKeydown"
           />
         </div>
 

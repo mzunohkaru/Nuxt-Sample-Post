@@ -1,4 +1,4 @@
-import { createHash, randomBytes, timingSafeEqual } from "crypto";
+import { createHash, timingSafeEqual } from "crypto";
 
 /**
  * パスワードをハッシュ化する
@@ -12,13 +12,13 @@ export function hashPassword(password: string): string {
  */
 export function verifyPassword(
   password: string,
-  hashedPassword: string
+  hashedPassword: string,
 ): boolean {
   const verifyHash = createHash("sha256").update(password).digest("hex");
 
   return timingSafeEqual(
     Buffer.from(hashedPassword, "hex"),
-    Buffer.from(verifyHash, "hex")
+    Buffer.from(verifyHash, "hex"),
   );
 }
 
@@ -37,7 +37,7 @@ export function generateAuthToken(userId: number): string {
  * 認証トークンを検証する
  */
 export function verifyAuthToken(
-  token: string
+  token: string,
 ): { userId: number; exp: number } | null {
   try {
     const payload = JSON.parse(Buffer.from(token, "base64").toString());

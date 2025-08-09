@@ -4,7 +4,8 @@ import { getDB } from "./db";
 /**
  * 認証が必要なAPIのミドルウェア
  */
-export async function requireAuth(event: any) {
+export async function requireAuth(event: H3Event) {
+  // any から H3Event に変更
   const authHeader = getHeader(event, "authorization");
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -28,7 +29,7 @@ export async function requireAuth(event: any) {
   const db = getDB();
   const userResult = await db.query(
     "SELECT id, username, email FROM users WHERE id = $1",
-    [payload.userId]
+    [payload.userId],
   );
 
   if (userResult.rows.length === 0) {

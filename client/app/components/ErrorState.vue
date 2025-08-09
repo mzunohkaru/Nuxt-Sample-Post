@@ -5,7 +5,8 @@ interface Props {
   message?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+// props変数を削除し、withDefaultsの結果を直接使用
+withDefaults(defineProps<Props>(), {
   title: "エラーが発生しました",
   message: "何かしらの問題が発生しました。",
 });

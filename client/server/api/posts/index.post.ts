@@ -19,8 +19,8 @@ export default defineEventHandler(async (event) => {
 
     // 新しい投稿を挿入
     const result = await db.query(
-      "INSERT INTO posts (title, content) VALUES ($1, $2) RETURNING *",
-      [body.title, body.content],
+      "INSERT INTO posts (title, content, user_id) VALUES ($1, $2, $3) RETURNING *",
+      [body.title, body.content, body.user_id || 1],
     );
 
     return {
