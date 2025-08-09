@@ -77,6 +77,47 @@ export const useAuth = () => {
     return true;
   };
 
+  // ユーザー情報の更新
+  const updateUser = async (
+    newUsername: string,
+    newEmail: string,
+  ): Promise<{ success: boolean; error?: string }> => {
+    const currentToken = getToken();
+    if (!currentToken) {
+      return { success: false, error: "認証されていません" };
+    }
+
+    try {
+      const response = await $fetch<{ success: boolean; user: User; error?: string }>(
+        "/api/account",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${currentToken}`,
+          },
+          body: { username: newUsername, email: newEmail },
+        },
+      );
+
+      if (response.success && response.user) {
+        // ローカルの状態を更新
+        user.value = response.user;
+        if (import.meta.client) {
+          localStorage.setItem("user", JSON.stringify(response.user));
+        }
+        return { success: true };
+      } else {
+        return { success: false, error: response.error || "更新に失敗しました" };
+      }
+    } catch (error: any) {
+      console.error("Failed to update user:", error);
+      const errorMessage =
+        error.data?.statusMessage || "サーバーエラーが発生しました";
+      return { success: false, error: errorMessage };
+    }
+  };
+
   return {
     user: readonly(user),
     token: readonly(token),
@@ -87,5 +128,6 @@ export const useAuth = () => {
     getCurrentUser,
     getToken,
     requireAuth,
+    updateUser, // 追加
   };
 };

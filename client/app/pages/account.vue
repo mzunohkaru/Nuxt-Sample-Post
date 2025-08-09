@@ -1,19 +1,65 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 
-// 認証状態管理 - isAuthenticatedを削除
-const { initAuth, getCurrentUser, requireAuth } = useAuth();
+// 認証状態管理
+const { initAuth, getCurrentUser, requireAuth, updateUser } = useAuth();
+const user = getCurrentUser();
 
-// 認証チェック
+// 編集モードの状態
+const isEditing = ref(false);
+const editUsername = ref("");
+const editEmail = ref("");
+
+// 通知の状態
+const notification = ref<{ type: "success" | "error"; message: string } | null>(
+  null,
+);
+
+// 認証チェックとフォーム初期化
 onMounted(() => {
   initAuth();
-  if (!requireAuth()) {
-    return;
+  if (!requireAuth()) return;
+
+  if (user) {
+    editUsername.value = user.username;
+    editEmail.value = user.email;
   }
 });
 
-// ユーザー情報
-const user = getCurrentUser();
+// 編集モードを開始
+function startEditing() {
+  if (user) {
+    editUsername.value = user.username;
+    editEmail.value = user.email;
+    isEditing.value = true;
+    notification.value = null; // 編集開始時に通知をクリア
+  }
+}
+
+// 編集をキャンセル
+function cancelEditing() {
+  isEditing.value = false;
+}
+
+// ユーザー情報を更新
+async function handleUpdate() {
+  notification.value = null; // 新しい操作の前に通知をクリア
+
+  const result = await updateUser(editUsername.value, editEmail.value);
+
+  if (result.success) {
+    isEditing.value = false;
+    notification.value = {
+      type: "success",
+      message: "ユーザー情報を更新しました。",
+    };
+  } else {
+    notification.value = {
+      type: "error",
+      message: result.error || "更新に失敗しました。",
+    };
+  }
+}
 </script>
 
 <template>
@@ -22,31 +68,78 @@ const user = getCurrentUser();
       <!-- ヘッダー -->
       <div class="account-header">
         <h1 class="account-title">アカウント情報</h1>
-        <p class="account-subtitle">あなたのプロフィール情報を確認できます</p>
+        <p class="account-subtitle">
+          {{
+            isEditing
+              ? "プロフィール情報を編集します"
+              : "あなたのプロフィール情報を確認できます"
+          }}
+        </p>
       </div>
 
-      <!-- ユーザー情報 -->
+      <!-- 通知エリア -->
+      <div v-if="notification" :class="`notification is-${notification.type}`">
+        {{ notification.message }}
+      </div>
+
+      <!-- ユーザー情報表示・編集フォーム -->
       <div v-if="user" class="user-info-section">
-        <div class="info-grid">
-          <div class="info-item">
-            <label class="info-label">ユーザー名</label>
-            <div class="info-value">{{ user.username }}</div>
+        <form @submit.prevent="handleUpdate">
+          <div class="info-grid">
+            <!-- ユーザー名 -->
+            <div class="info-item">
+              <label for="username" class="info-label">ユーザー名</label>
+              <div v-if="!isEditing" class="info-value">
+                {{ user.username }}
+              </div>
+              <input
+                v-else
+                id="username"
+                v-model="editUsername"
+                type="text"
+                class="info-input"
+              />
+            </div>
+
+            <!-- メールアドレス -->
+            <div class="info-item">
+              <label for="email" class="info-label">メールアドレス</label>
+              <div v-if="!isEditing" class="info-value">{{ user.email }}</div>
+              <input
+                v-else
+                id="email"
+                v-model="editEmail"
+                type="email"
+                class="info-input"
+              />
+            </div>
+
+            <!-- ユーザーID（編集不可） -->
+            <div class="info-item">
+              <label class="info-label">ユーザーID</label>
+              <div class="info-value">#{{ user.id }}</div>
+            </div>
           </div>
 
-          <div class="info-item">
-            <label class="info-label">メールアドレス</label>
-            <div class="info-value">{{ user.email }}</div>
+          <!-- 編集中のアクションボタン -->
+          <div v-if="isEditing" class="editing-actions">
+            <button type="button" class="cancel-button" @click="cancelEditing">
+              キャンセル
+            </button>
+            <button type="submit" class="save-button">変更を保存</button>
           </div>
-
-          <div class="info-item">
-            <label class="info-label">ユーザーID</label>
-            <div class="info-value">#{{ user.id }}</div>
-          </div>
-        </div>
+        </form>
       </div>
 
-      <!-- アクションボタン -->
+      <!-- アクションセクション -->
       <div class="action-section">
+        <button
+          v-if="!isEditing"
+          class="edit-button"
+          @click="startEditing"
+        >
+          プロフィールを編集
+        </button>
         <NuxtLink to="/" class="back-button">
           <svg
             class="button-icon"
@@ -69,7 +162,7 @@ const user = getCurrentUser();
 </template>
 
 <style scoped>
-/* メインコンテナ */
+/* 基本スタイルは省略（既存のものをベースとする） */
 .account-container {
   min-height: calc(100vh - 4rem);
   background-color: #f9fafb;
@@ -78,8 +171,6 @@ const user = getCurrentUser();
   align-items: center;
   justify-content: center;
 }
-
-/* アカウントカード */
 .account-card {
   background-color: white;
   border-radius: 0.5rem;
@@ -89,44 +180,35 @@ const user = getCurrentUser();
   max-width: 600px;
   overflow: hidden;
 }
-
-/* ヘッダー */
 .account-header {
   background-color: #f8fafc;
   padding: 2rem;
   border-bottom: 1px solid #e5e7eb;
   text-align: center;
 }
-
 .account-title {
   font-size: 1.875rem;
   font-weight: 700;
   color: #1f2937;
   margin: 0 0 0.5rem 0;
 }
-
 .account-subtitle {
   color: #6b7280;
   font-size: 1rem;
   margin: 0;
 }
-
-/* ユーザー情報セクション */
 .user-info-section {
   padding: 2rem;
 }
-
 .info-grid {
   display: grid;
   gap: 1.5rem;
 }
-
 .info-item {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
-
 .info-label {
   font-size: 0.875rem;
   font-weight: 600;
@@ -134,7 +216,6 @@ const user = getCurrentUser();
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-
 .info-value {
   font-size: 1.125rem;
   color: #1f2937;
@@ -143,56 +224,122 @@ const user = getCurrentUser();
   border: 1px solid #e5e7eb;
   border-radius: 0.375rem;
 }
-
-/* アクションセクション */
 .action-section {
-  padding: 2rem;
+  padding: 1.5rem 2rem;
   border-top: 1px solid #e5e7eb;
   background-color: #f8fafc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-
 .back-button {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background-color: #3b82f6;
-  color: white;
+  color: #374151;
   padding: 0.75rem 1.5rem;
   border-radius: 0.375rem;
   text-decoration: none;
   font-weight: 500;
   transition: background-color 0.15s ease;
+  border: 1px solid #d1d5db;
 }
-
 .back-button:hover {
-  background-color: #2563eb;
+  background-color: #f3f4f6;
 }
-
 .button-icon {
   width: 1.25rem;
   height: 1.25rem;
 }
 
-/* レスポンシブ対応 */
+/* --- 追加・変更したスタイル --- */
+
+/* 編集用インプット */
+.info-input {
+  font-size: 1.125rem;
+  color: #1f2937;
+  padding: 0.75rem;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.info-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+}
+
+/* 編集中のアクションボタン */
+.editing-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.cancel-button,
+.save-button,
+.edit-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.edit-button {
+  background-color: #3b82f6;
+  color: white;
+}
+.edit-button:hover {
+  background-color: #2563eb;
+}
+
+.cancel-button {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+.cancel-button:hover {
+  background-color: #d1d5db;
+}
+
+.save-button {
+  background-color: #10b981;
+  color: white;
+}
+.save-button:hover {
+  background-color: #059669;
+}
+
+/* 通知 */
+.notification {
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #e5e7eb;
+  font-weight: 500;
+  text-align: center;
+}
+.notification.is-success {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+.notification.is-error {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
 @media (max-width: 640px) {
   .account-container {
     padding: 1rem;
   }
-
-  .account-header {
-    padding: 1.5rem;
-  }
-
-  .account-title {
-    font-size: 1.5rem;
-  }
-
-  .user-info-section {
-    padding: 1.5rem;
-  }
-
+  .account-header,
+  .user-info-section,
   .action-section {
     padding: 1.5rem;
+  }
+  .account-title {
+    font-size: 1.5rem;
   }
 }
 </style>
